@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recorder by Zenvik</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #7c3aed;
+            --primary-dark: #5b21b6;
+            --primary-light: #a78bfa;
+            --bg-dark: #0f0f1a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #222240;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-red: #ef4444;
+            --accent-green: #22c55e;
+            --accent-blue: #3b82f6;
+            --accent-orange: #f97316;
+            --border: #2d2d4a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(239,68,68,0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative; z-index: 10;
+            padding: 20px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            background: rgba(15,15,26,0.8);
+        }
+
+        .logo-section { display: flex; align-items: center; gap: 12px; }
+
+        .logo-icon {
+            width: 45px; height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(124,58,237,0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 22px; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text span {
+            font-size: 11px; color: var(--text-secondary);
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+
+        .header-badge {
+            padding: 6px 14px;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 20px; font-size: 12px;
+            color: var(--accent-green);
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .header-badge::before {
+            content: ''; width: 6px; height: 6px;
+            background: var(--accent-green); border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        .main-container {
+            position: relative; z-index: 10;
+            max-width: 1200px; margin: 0 auto; padding: 30px 20px;
+        }
+
+        .section-title {
+            font-size: 16px; font-weight: 600; color: var(--text-secondary);
+            margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1.5px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .section-title::before {
+            content: ''; width: 3px; height: 18px;
+            background: var(--primary); border-radius: 2px;
+        }
+
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px; margin-bottom: 30px;
+        }
+
+        .source-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 14px; padding: 22px;
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 12px; text-align: center;
+            user-select: none;
+        }
+
+        .source-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124,58,237,0.15);
+        }
+
+        .source-card.active {
+            border-color: var(--primary);
+            background: rgba(124,58,237,0.1);
+            box-shadow: 0 0 20px rgba(124,58,237,0.2);
+        }
+
+        .source-card .icon {
+            width: 50px; height: 50px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+
+        .source-card:nth-child(1) .icon { background: rgba(124,58,237,0.15); }
+        .source-card:nth-child(2) .icon { background: rgba(59,130,246,0.15); }
+        .source-card:nth-child(3) .icon { background: rgba(249,115,22,0.15); }
+        .source-card:nth-child(4) .icon { background: rgba(34,197,94,0.15); }
+
+        .source-card h3 { font-size: 14px; font-weight: 600; }
+        .source-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+        .settings-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px; margin-bottom: 25px;
+        }
+
+        .setting-group {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px;
+        }
+
+        .setting-group label {
+            display: block; font-size: 12px; color: var(--text-secondary);
+            margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .setting-group select {
+            width: 100%; padding: 10px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-primary);
+            font-size: 14px; cursor: pointer; outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .setting-group select:focus { border-color: var(--primary); }
+        .setting-group select option { background: var(--bg-dark); color: var(--text-primary); }
+
+        .toggle-row {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-top: 4px;
+        }
+
+        .toggle-row span { font-size: 14px; }
+
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px; cursor: pointer;
+        }
+
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+        .toggle-slider {
+            position: absolute; inset: 0;
+            background: var(--border); border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: ''; position: absolute;
+            width: 18px; height: 18px; left: 3px; bottom: 3px;
+            background: white; border-radius: 50%; transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+        .preview-section { margin-bottom: 25px; }
+
+        .preview-container {
+            background: #000;
+            border: 2px solid var(--border);
+            border-radius: 16px; overflow: hidden;
+            position: relative;
+            aspect-ratio: 16/9; max-height: 500px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .preview-container video {
+            width: 100%; height: 100%; object-fit: contain;
+        }
+
+        .preview-placeholder {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 16px;
+            color: var(--text-secondary);
+        }
+
+        .preview-placeholder .big-icon { font-size: 60px; opacity: 0.3; }
+        .preview-placeholder p { font-size: 16px; }
+        .preview-placeholder small { font-size: 12px; opacity: 0.6; }
+
+        .recording-overlay {
+            position: absolute; top: 16px; left: 16px;
+            display: none; align-items: center; gap: 8px;
+            padding: 8px 16px;
+            background: rgba(239,68,68,0.9);
+            border-radius: 8px; font-size: 13px; font-weight: 600;
+            z-index: 5;
+        }
+
+        .recording-overlay.show { display: flex; }
+
+        .recording-overlay .rec-dot {
+            width: 8px; height: 8px;
+            background: white; border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+        .timer-display {
+            position: absolute; top: 16px; right: 16px;
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px; font-weight: 700;
+            display: none;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .timer-display.show { display: block; }
+
+        .controls-bar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-bottom: 25px; flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 32px; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 8px; outline: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5; cursor: not-allowed; transform: none !important;
+        }
+
+        .btn:active:not(:disabled) { transform: scale(0.97); }
+
+        .btn-record {
+            background: linear-gradient(135deg, var(--accent-red), #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239,68,68,0.3);
+            font-size: 16px; padding: 16px 40px;
+        }
+
+        .btn-record:hover:not(:disabled) {
+            box-shadow: 0 6px 25px rgba(239,68,68,0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-record.recording {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+            animation: record-glow 2s infinite;
+        }
+
+        @keyframes record-glow {
+            0%,100%{box-shadow:0 4px 15px rgba(239,68,68,0.3)}
+            50%{box-shadow:0 4px 30px rgba(239,68,68,0.6)}
+        }
+
+        .btn-pause {
+            background: var(--accent-orange); color: white; display: none;
+        }
+
+        .btn-pause:hover { background: #ea580c; }
+
+        .btn-stop {
+            background: var(--bg-card); color: var(--text-primary);
+            border: 2px solid var(--border); display: none;
+        }
+
+        .btn-stop:hover {
+            border-color: var(--accent-red);
+            background: rgba(239,68,68,0.1);
+        }
+
+        .recordings-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .recording-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.2s; flex-wrap: wrap; gap: 10px;
+        }
+
+        .recording-item:hover {
+            border-color: var(--primary);
+            background: var(--bg-card-hover);
+        }
+
+        .recording-info { display: flex; align-items: center; gap: 14px; }
+
+        .recording-info .file-icon {
+            width: 42px; height: 42px;
+            background: rgba(124,58,237,0.15);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+
+        .recording-details h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+        .recording-details p { font-size: 12px; color: var(--text-secondary); }
+
+        .recording-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .btn-small {
+            padding: 8px 16px; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, var(--accent-green), #16a34a);
+            color: white;
+        }
+
+        .btn-download:hover { box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+
+        .btn-play {
+            background: rgba(59,130,246,0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(59,130,246,0.3);
+        }
+
+        .btn-play:hover { background: rgba(59,130,246,0.25); }
+
+        .btn-delete {
+            background: rgba(239,68,68,0.1);
+            color: var(--accent-red);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .btn-delete:hover { background: rgba(239,68,68,0.2); }
+
+        .empty-state {
+            text-align: center; padding: 50px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .empty-icon { font-size: 48px; opacity: 0.3; margin-bottom: 12px; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000; display: none;
+            align-items: center; justify-content: center;
+            padding: 20px; backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px; width: 100%; max-width: 900px;
+            overflow: hidden; border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h3 { font-size: 16px; }
+
+        .modal-close {
+            width: 36px; height: 36px; border: none;
+            background: rgba(255,255,255,0.1);
+            color: white; border-radius: 8px;
+            cursor: pointer; font-size: 18px; transition: background 0.2s;
+        }
+
+        .modal-close:hover { background: rgba(239,68,68,0.3); }
+
+        .modal-body video { width: 100%; display: block; }
+
+        .status-bar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 30px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--text-secondary);
+            background: var(--bg-card); padding: 8px 16px;
+            border-radius: 8px; border: 1px solid var(--border);
+        }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-dot.green { background: var(--accent-green); }
+        .status-dot.yellow { background: var(--accent-orange); }
+        .status-dot.red { background: var(--accent-red); animation: blink 1s infinite; }
+
+        .footer {
+            text-align: center; padding: 20px;
+            color: var(--text-secondary); font-size: 13px;
+            border-top: 1px solid var(--border); margin-top: 40px;
+        }
+
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px; font-size: 14px;
+            z-index: 2000;
+            transform: translateY(100px); opacity: 0;
+            transition: all 0.4s ease;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 90vw;
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-left: 4px solid var(--accent-green); }
+        .toast.error { border-left: 4px solid var(--accent-red); }
+        .toast.info { border-left: 4px solid var(--accent-blue); }
+
+        .countdown-overlay {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none; align-items: center; justify-content: center;
+            z-index: 20; border-radius: 14px;
+        }
+
+        .countdown-overlay.show { display: flex; }
+
+        .countdown-number {
+            font-size: 100px; font-weight: 800; color: white;
+            animation: countdown-pop 0.8s ease;
+        }
+
+        @keyframes countdown-pop {
+            0%{transform:scale(2);opacity:0}
+            50%{transform:scale(1);opacity:1}
+            100%{transform:scale(0.8);opacity:0.5}
+        }
+
+        .paused-badge {
+            position: absolute; bottom: 16px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(249,115,22,0.9);
+            padding: 6px 20px; border-radius: 6px;
+            font-size: 13px; font-weight: 600; display: none;
+        }
+
+        .paused-badge.show { display: block; }
+
+        .processing-bar {
+            height: 3px; background: var(--bg-card);
+            border-radius: 3px; overflow: hidden;
+            margin-top: 10px; display: none;
+        }
+
+        .processing-bar.show { display: block; }
+
+        .processing-bar::after {
+            content: ''; display: block;
+            width: 40%; height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent-blue));
+            border-radius: 3px;
+            animation: processing 1.5s ease-in-out infinite;
+        }
+
+        @keyframes processing {
+            0%{transform:translateX(-100%)}
+            100%{transform:translateX(350%)}
+        }
+
+        .error-box {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px; padding: 14px 18px;
+            margin-bottom: 20px; font-size: 13px;
+            color: var(--accent-red); display: none;
+            align-items: flex-start; gap: 10px;
+            line-height: 1.5;
+        }
+
+        .error-box.show { display: flex; }
+
+        .shortcut-hint {
+            text-align: center; font-size: 12px;
+            color: var(--text-secondary); margin-top: 8px;
+            opacity: 0.7;
+        }
+
+        .shortcut-hint kbd {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 4px; padding: 2px 6px; font-size: 11px;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 14px 16px; }
+            .logo-text h1 { font-size: 18px; }
+            .header-badge { font-size: 11px; padding: 4px 10px; }
+            .main-container { padding: 20px 12px; }
+            .source-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .source-card { padding: 16px 10px; }
+            .source-card p { display: none; }
+            .settings-panel { grid-template-columns: 1fr 1fr; }
+            .controls-bar { gap: 10px; }
+            .btn-record { padding: 14px 28px; font-size: 14px; }
+            .recording-item { flex-direction: column; align-items: flex-start; }
+            .recording-actions { width: 100%; }
+            .status-bar { gap: 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .settings-panel { grid-template-columns: 1fr; }
+            .preview-container { aspect-ratio: 4/3; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo-section">
+            <div class="logo-icon">🎬</div>
+            <div class="logo-text">
+                <h1>Recorder by Zenvik</h1>
+                <span>Lightweight Screen Recorder</span>
+            </div>
+        </div>
+        <div class="header-badge"><span>Low-End Optimized</span></div>
+    </header>
+
+    <div class="main-container">
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot green" id="statusDot"></span>
+                <span id="statusText">Ready to record</span>
+            </div>
+            <div class="status-item">
+                <span>🎬</span>
+                <span id="recordCount">0 recordings</span>
+            </div>
+        </div>
+
+        <div class="error-box" id="errorBox">
+            <span>⚠️</span>
+            <span id="errorText"></span>
+        </div>
+
+        <div class="section-title">Choose Capture Source</div>
+        <div class="source-grid">
+            <div class="source-card active" onclick="selectSource(this, 'screen')">
+                <div class="icon">🖥️</div>
+                <h3>Entire Screen</h3>
+                <p>Capture your full display</p>
+            </div>
+            <div class="source-card" onclick="selectSource(this, 'window')">
+                <div class="icon">🪟</div>
+                <h3>Window</h3>
+                <p>Record a specific window</p>
+            </div>
+            <div class="source-card" onclick="selectSource(this, 'tab')">
+                <div class="icon">🌐</div>
+                <h3>Browser Tab</h3>
+                <p>Capture a browser tab</p>
+            </div>
+            <div class="source-card" onclick="selectSource(this, 'camera')">
+                <div class="icon">📷</div>
+                <h3>Webcam</h3>
+                <p>Record from camera</p>
+            </div>
+        </div>
+
+        <div class="section-title">Recording Settings</div>
+        <div class="settings-panel">
+            <div class="setting-group">
+                <label>Video Quality</label>
+                <select id="qualitySelect">
+                    <option value="low">Low (480p) — Best for Low-End</option>
+                    <option value="medium" selected>Medium (720p) — Balanced</option>
+                    <option value="high">High (1080p)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Frame Rate</label>
+                <select id="fpsSelect">
+                    <option value="15">15 FPS — Lowest CPU</option>
+                    <option value="24">24 FPS — Cinematic</option>
+                    <option value="30" selected>30 FPS — Standard</option>
+                    <option value="60">60 FPS — Smooth</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Format</label>
+                <select id="formatSelect">
+                    <option value="webm" selected>WebM (Smaller Size)</option>
+                    <option value="mp4">MP4 (if supported)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Audio</label>
+                <div class="toggle-row">
+                    <span>System Audio</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="audioToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row" style="margin-top:10px;">
+                    <span>Microphone</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="micToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Countdown Timer</label>
+                <select id="countdownSelect">
+                    <option value="0">No Countdown</option>
+                    <option value="3" selected>3 Seconds</option>
+                    <option value="5">5 Seconds</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Bitrate</label>
+                <select id="bitrateSelect">
+                    <option value="500000">500 kbps — Low End</option>
+                    <option value="1000000" selected>1 Mbps — Balanced</option>
+                    <option value="2500000">2.5 Mbps — Good</option>
+                    <option value="5000000">5 Mbps — Best Quality</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section-title">Preview</div>
+        <div class="preview-section">
+            <div class="preview-container" id="previewContainer">
+                <div class="preview-placeholder" id="previewPlaceholder">
+                    <div class="big-icon">🎬</div>
+                    <p>Select a source and start recording</p>
+                    <small>Your preview will appear here</small>
+                </div>
+                <video id="previewVideo" autoplay muted playsinline style="display:none;"></video>
+                <div class="recording-overlay" id="recordingOverlay">
+                    <span class="rec-dot"></span><span>REC</span>
+                </div>
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <div class="countdown-overlay" id="countdownOverlay">
+                    <div class="countdown-number" id="countdownNumber">3</div>
+                </div>
+                <div class="paused-badge" id="pausedBadge">⏸ PAUSED</div>
+            </div>
+            <div class="processing-bar" id="processingBar"></div>
+        </div>
+
+        <div class="controls-bar">
+            <button class="btn btn-record" id="btnRecord" onclick="handleRecord()">
+                <span>⏺</span> Start Recording
+            </button>
+            <button class="btn btn-pause" id="btnPause" onclick="handlePause()">
+                <span>⏸</span> Pause
+            </button>
+            <button class="btn btn-stop" id="btnStop" onclick="handleStop()">
+                <span>⏹</span> Stop & Save
+            </button>
+        </div>
+
+        <div class="shortcut-hint">
+            <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> Record/Stop &nbsp;|&nbsp;
+            <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> Pause/Resume
+        </div>
+
+        <div class="recordings-section" style="margin-top:30px;">
+            <div class="section-title">Your Recordings</div>
+            <div id="recordingsList">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">📂</div>
+                    <p>No recordings yet</p>
+                    <small>Your recordings will appear here for download</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Made with ❤️ by <strong>Zenvik</strong> — No installation needed. 100% browser-based.</p>
+        <p style="margin-top:6px;opacity:0.6;">Works on Chrome, Edge & Firefox. All recordings stay on your device.</p>
+    </div>
+
+    <div class="modal-overlay" id="playbackModal" onclick="if(event.target===this)closeModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Playback</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <video id="modalVideo" controls></video>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+let mediaRecorder = null;
+let recordedChunks = [];
+let combinedStream = null;
+let selectedSource = 'screen';
+let isRecording = false;
+let isPaused = false;
+let timerInterval = null;
+let elapsedSeconds = 0;
+let recordings = [];
+let recIdCounter = 0;
+
+// ===== SOURCE SELECTION =====
+function selectSource(card, source) {
+    document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    selectedSource = source;
+    hideError();
+    showToast('Source: ' + getSourceLabel(source), 'info');
+}
+
+function getSourceLabel(s) {
+    return { screen:'Entire Screen', window:'Window', tab:'Browser Tab', camera:'Webcam' }[s] || s;
+}
+
+// ===== MIME TYPE HELPER =====
+function pickMimeType(format) {
+    const candidates = format === 'mp4'
+        ? ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+        : ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+
+    for (const m of candidates) {
+        if (MediaRecorder.isTypeSupported(m)) return m;
+    }
+    return '';
+}
+
+// ===== GET STREAM =====
+async function acquireStream() {
+    const wantAudio = document.getElementById('audioToggle').checked;
+    const wantMic   = document.getElementById('micToggle').checked;
+    const fps = parseInt(document.getElementById('fpsSelect').value);
+
+    let displayStream = null;
+    let micStream = null;
+
+    if (selectedSource === 'camera') {
+        // Webcam
+        displayStream = await navigator.mediaDevices.getUserMedia({
+            video: { frameRate: { ideal: fps } },
+            audio: wantAudio || wantMic
+        });
+    } else {
+        // Screen / Window / Tab — use simple constraints
+        // NOTE: displaySurface is a *hint* — browser still shows picker
+        const constraints = {
+            video: {
+                frameRate: { ideal: fps },
+                cursor: 'always'
+            },
+            audio: wantAudio   // system audio
+        };
+
+        // Chrome 107+ supports surfaceSwitching
+        try {
+            displayStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+        } catch (err) {
+            // If audio:true fails (Firefox), retry without audio
+            if (err.name === 'NotFoundError' || err.name === 'TypeError') {
+                constraints.audio = false;
+                displayStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+                if (wantAudio) showToast('System audio not available on this browser', 'error');
+            } else {
+                throw err;
+            }
+        }
+    }
+
+    // Microphone mixing
+    if (wantMic && selectedSource !== 'camera') {
+        try {
+            micStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+        } catch (e) {
+            showToast('Mic unavailable, continuing without it', 'error');
+        }
+    }
+
+    // Combine tracks
+    const tracks = [];
+
+    // Video track
+    displayStream.getVideoTracks().forEach(t => tracks.push(t));
+
+    // Audio — mix system + mic if both present
+    const sysAudioTracks = displayStream.getAudioTracks();
+    const micAudioTracks = micStream ? micStream.getAudioTracks() : [];
+
+    if (sysAudioTracks.length > 0 && micAudioTracks.length > 0) {
+        // Mix with AudioContext
+        try {
+            const ctx = new AudioContext();
+            const dest = ctx.createMediaStreamDestination();
+            ctx.createMediaStreamSource(new MediaStream(sysAudioTracks)).connect(dest);
+            ctx.createMediaStreamSource(new MediaStream(micAudioTracks)).connect(dest);
+            dest.stream.getAudioTracks().forEach(t => tracks.push(t));
+        } catch (e) {
+            sysAudioTracks.forEach(t => tracks.push(t));
+        }
+    } else if (sysAudioTracks.length > 0) {
+        sysAudioTracks.forEach(t => tracks.push(t));
+    } else if (micAudioTracks.length > 0) {
+        micAudioTracks.forEach(t => tracks.push(t));
+    }
+
+    combinedStream = new MediaStream(tracks);
+    return combinedStream;
+}
+
+// ===== COUNTDOWN =====
+function runCountdown(sec) {
+    return new Promise(resolve => {
+        if (sec <= 0) return resolve();
+        const overlay = document.getElementById('countdownOverlay');
+        const numEl   = document.getElementById('countdownNumber');
+        overlay.classList.add('show');
+        let count = sec;
+        numEl.textContent = count;
+
+        const iv = setInterval(() => {
+            count--;
+            if (count <= 0) {
+                clearInterval(iv);
+                overlay.classList.remove('show');
+                resolve();
+            } else {
+                numEl.textContent = count;
+                numEl.style.animation = 'none';
+                void numEl.offsetWidth;            // reflow
+                numEl.style.animation = 'countdown-pop 0.8s ease';
+            }
+        }, 1000);
+    });
+}
+
+// ===== RECORD =====
+async function handleRecord() {
+    if (isRecording) return;
+
+    const btn = document.getElementById('btnRecord');
+    btn.disabled = true;
+    hideError();
+    updateStatus('preparing', 'Preparing…');
+
+    try {
+        const stream = await acquireStream();
+
+        // Show preview
+        const vid = document.getElementById('previewVideo');
+        vid.srcObject = stream;
+        vid.style.display = 'block';
+        document.getElementById('previewPlaceholder').style.display = 'none';
+        await vid.play().catch(() => {});
+
+        // When user stops sharing via browser UI
+        stream.getVideoTracks().forEach(t => {
+            t.onended = () => { if (isRecording) handleStop(); };
+        });
+
+        // Countdown
+        await runCountdown(parseInt(document.getElementById('countdownSelect').value));
+
+        // Setup MediaRecorder
+        const format  = document.getElementById('formatSelect').value;
+        const bitrate = parseInt(document.getElementById('bitrateSelect').value);
+        const mime    = pickMimeType(format);
+
+        const opts = { videoBitsPerSecond: bitrate };
+        if (mime) opts.mimeType = mime;
+
+        try {
+            mediaRecorder = new MediaRecorder(stream, opts);
+        } catch (e) {
+            mediaRecorder = new MediaRecorder(stream);
+        }
+
+        recordedChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+            if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => finishRecording();
+
+        mediaRecorder.onerror = e => {
+            console.error('MediaRecorder error', e);
+            showError('Recording error: ' + (e.error?.message || 'unknown'));
+            handleStop();
+        };
+
+        mediaRecorder.start(1000);   // 1s chunks — better for low RAM
+
+        isRecording = true;
+        isPaused = false;
+        elapsedSeconds = 0;
+
+        btn.classList.add('recording');
+        btn.innerHTML = '<span>⏺</span> Recording…';
+        btn.disabled = false;
+        document.getElementById('btnPause').style.display = 'flex';
+        document.getElementById('btnStop').style.display  = 'flex';
+        document.getElementById('recordingOverlay').classList.add('show');
+        document.getElementById('timerDisplay').classList.add('show');
+        updateStatus('recording', 'Recording…');
+        startTimer();
+        showToast('Recording started!', 'success');
+
+    } catch (err) {
+        btn.disabled = false;
+        updateStatus('ready', 'Ready to record');
+
+        if (err.name === 'NotAllowedError') {
+            showError('Permission denied — you must click "Allow" or choose a screen in the browser popup.');
+        } else if (err.name === 'NotFoundError') {
+            showError('No suitable capture source found.');
+        } else if (err.name === 'NotReadableError') {
+            showError('Could not access the selected source. It may be in use.');
+        } else {
+            showError(err.message || 'Unknown error');
+        }
+        console.error(err);
+    }
+}
+
+// ===== PAUSE =====
+function handlePause() {
+    if (!isRecording || !mediaRecorder) return;
+
+    if (isPaused) {
+        mediaRecorder.resume();
+        isPaused = false;
+        document.getElementById('btnPause').innerHTML = '<span>⏸</span> Pause';
+        document.getElementById('pausedBadge').classList.remove('show');
+        document.getElementById('recordingOverlay').classList.add('show');
+        updateStatus('recording', 'Recording…');
+        startTimer();
+        showToast('Resumed', 'info');
+    } else {
+        mediaRecorder.pause();
+        isPaused = true;
+        clearInterval(timerInterval);
+        document.getElementById('btnPause').innerHTML = '<span>▶</span> Resume';
+        document.getElementById('pausedBadge').classList.add('show');
+        document.getElementById('recordingOverlay').classList.remove('show');
+        updateStatus('paused', 'Paused');
+        showToast('Paused', 'info');
+    }
+}
+
+// ===== STOP =====
+function handleStop() {
+    if (!mediaRecorder) return;
+    if (mediaRecorder.state !== 'inactive') {
+        try { mediaRecorder.stop(); } catch(e) {}
+    }
+
+    // Stop every track
+    if (combinedStream) {
+        combinedStream.getTracks().forEach(t => t.stop());
+        combinedStream = null;
+    }
+
+    isRecording = false;
+    isPaused = false;
+    clearInterval(timerInterval);
+
+    const btn = document.getElementById('btnRecord');
+    btn.classList.remove('recording');
+    btn.innerHTML = '<span>⏺</span> Start Recording';
+    btn.disabled = false;
+    document.getElementById('btnPause').style.display = 'none';
+    document.getElementById('btnPause').innerHTML = '<span>⏸</span> Pause';
+    document.getElementById('btnStop').style.display  = 'none';
+    document.getElementById('recordingOverlay').classList.remove('show');
+    document.getElementById('timerDisplay').classList.remove('show');
+    document.getElementById('pausedBadge').classList.remove('show');
+    document.getElementById('processingBar').classList.add('show');
+    updateStatus('processing', 'Processing…');
+}
+
+// ===== FINISH =====
+function finishRecording() {
+    if (recordedChunks.length === 0) {
+        document.getElementById('processingBar').classList.remove('show');
+        resetPreview();
+        updateStatus('ready', 'Ready to record');
+        showToast('No data recorded', 'error');
+        return;
+    }
+
+    const format   = document.getElementById('formatSelect').value;
+    const realMime = mediaRecorder.mimeType || 'video/webm';
+    const ext      = realMime.includes('mp4') ? 'mp4' : 'webm';
+
+    const blob = new Blob(recordedChunks, { type: realMime });
+    const url  = URL.createObjectURL(blob);
+    const dur  = formatTime(elapsedSeconds);
+    const size = prettyBytes(blob.size);
+    const now  = new Date();
+
+    recIdCounter++;
+    const rec = {
+        id: recIdCounter,
+        name: 'Zenvik_Rec_' + recIdCounter + '_' + now.toISOString().slice(0,10),
+        url, blob, ext, duration: dur, size,
+        timestamp: now.toLocaleString()
+    };
+
+    recordings.push(rec);
+    renderRecItem(rec);
+    updateRecordCount();
+
+    document.getElementById('processingBar').classList.remove('show');
+    resetPreview();
+    updateStatus('ready', 'Ready to record');
+
+    // Auto-download
+    triggerDownload(rec);
+
+    showToast('Saved & downloading (' + size + ')', 'success');
+}
+
+// ===== UI HELPERS =====
+function resetPreview() {
+    const vid = document.getElementById('previewVideo');
+    vid.srcObject = null;
+    vid.style.display = 'none';
+    document.getElementById('previewPlaceholder').style.display = 'flex';
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        document.getElementById('timerDisplay').textContent = formatTime(elapsedSeconds);
+    }, 1000);
+}
+
+function formatTime(s) {
+    const h = String(Math.floor(s/3600)).padStart(2,'0');
+    const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+    const sec = String(s%60).padStart(2,'0');
+    return h+':'+m+':'+sec;
+}
+
+function prettyBytes(b) {
+    if (b === 0) return '0 B';
+    const u = ['B','KB','MB','GB'];
+    const i = Math.floor(Math.log(b)/Math.log(1024));
+    return (b/Math.pow(1024,i)).toFixed(2)+' '+u[i];
+}
+
+function updateStatus(type, text) {
+    const dot = document.getElementById('statusDot');
+    document.getElementById('statusText').textContent = text;
+    dot.className = 'status-dot ' + ({ready:'green',recording:'red',paused:'yellow',preparing:'yellow',processing:'yellow'}[type]||'green');
+}
+
+function updateRecordCount() {
+    document.getElementById('recordCount').textContent = recordings.length + ' recording' + (recordings.length!==1?'s':'');
+}
+
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.className = 'toast ' + type;
+    t.innerHTML = ({success:'✅',error:'❌',info:'ℹ️'}[type]||'') + ' ' + msg;
+    t.classList.add('show');
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function showError(msg) {
+    document.getElementById('errorText').textContent = msg;
+    document.getElementById('errorBox').classList.add('show');
+}
+function hideError() { document.getElementById('errorBox').classList.remove('show'); }
+
+// ===== RECORDING LIST =====
+function renderRecItem(rec) {
+    const empty = document.getElementById('emptyState');
+    if (empty) empty.remove();
+
+    const list = document.getElementById('recordingsList');
+    const div = document.createElement('div');
+    div.className = 'recording-item';
+    div.id = 'rec-' + rec.id;
+    div.innerHTML = `
+        <div class="recording-info">
+            <div class="file-icon">🎥</div>
+            <div class="recording-details">
+                <h4>${rec.name}.${rec.ext}</h4>
+                <p>${rec.duration} · ${rec.size} · ${rec.timestamp}</p>
+            </div>
+        </div>
+        <div class="recording-actions">
+            <button class="btn-small btn-play"     onclick="playRec(${rec.id})">▶ Play</button>
+            <button class="btn-small btn-download"  onclick="dlRec(${rec.id})">⬇ Download</button>
+            <button class="btn-small btn-delete"    onclick="delRec(${rec.id})">🗑 Delete</button>
+        </div>`;
+    list.prepend(div);
+}
+
+function triggerDownload(rec) {
+    const a = document.createElement('a');
+    a.href = rec.url;
+    a.download = rec.name + '.' + rec.ext;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+}
+
+function dlRec(id) {
+    const r = recordings.find(x => x.id === id);
+    if (r) { triggerDownload(r); showToast('Downloading…','success'); }
+}
+
+function playRec(id) {
+    const r = recordings.find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('modalTitle').textContent = r.name;
+    const v = document.getElementById('modalVideo');
+    v.src = r.url;
+    document.getElementById('playbackModal').classList.add('show');
+    v.play().catch(()=>{});
+}
+
+function closeModal() {
+    const v = document.getElementById('modalVideo');
+    v.pause(); v.removeAttribute('src'); v.load();
+    document.getElementById('playbackModal').classList.remove('show');
+}
+
+function delRec(id) {
+    const idx = recordings.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    URL.revokeObjectURL(recordings[idx].url);
+    recordings.splice(idx,1);
+    const el = document.getElementById('rec-'+id);
+    if (el) { el.style.transition='all .3s'; el.style.opacity='0'; el.style.transform='translateX(40px)'; setTimeout(()=>el.remove(),300); }
+    updateRecordCount();
+    if (recordings.length === 0) {
+        document.getElementById('recordingsList').innerHTML =
+            '<div class="empty-state" id="emptyState"><div class="empty-icon">📂</div><p>No recordings yet</p><small>Your recordings will appear here for download</small></div>';
+    }
+    showToast('Deleted','info');
+}
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyR') {
+        e.preventDefault();
+        isRecording ? handleStop() : handleRecord();
+    }
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyP') {
+        e.preventDefault();
+        if (isRecording) handlePause();
+    }
+    if (e.key === 'Escape') closeModal();
+});
+
+// ===== WARN ON LEAVE =====
+window.addEventListener('beforeunload', e => {
+    if (isRecording) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ===== AUTO-OPTIMIZE FOR LOW-END =====
+(function(){
+    const mem = navigator.deviceMemory;
+    const cores = navigator.hardwareConcurrency;
+    if ((mem && mem <= 4) || (cores && cores <= 4)) {
+        document.getElementById('qualitySelect').value = 'low';
+        document.getElementById('fpsSelect').value     = '24';
+        document.getElementById('bitrateSelect').value = '500000';
+        showToast('Auto-optimized for your device','info');
+    }
+})();
+</script>
+</body>
+</html>
